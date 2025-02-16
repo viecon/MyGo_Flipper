@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>測試網站</title>
+  </head>
+  <body>
+    <h1>MYGO</h1>
+    <button id="startBtn">開始錄音</button>
+    <button id="stopBtn" disabled>停止錄音</button>
+    <div id="result"></div>
+
+    <script>
+      const startBtn = document.getElementById("startBtn");
+      const stopBtn = document.getElementById("stopBtn");
+      const resultDiv = document.getElementById("result");
+      let recorder;
+
+      startBtn.addEventListener("click", () => {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            recorder = new MediaRecorder(stream);
+            recorder.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+
+            recorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                const blob = new Blob([event.data], { type: "audio/wav" }); // wav
+                sendAudioToServer(blob);
+              }
+            };
+          })
+          .catch((error) => {
+            console.error("無法存取麥克風:", error);
+          });
+      });
+
+      stopBtn.addEventListener("click", () => {
+        recorder.stop();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+
+      async function sendAudioToServer(blob) {
+        const formData = new FormData();
+        formData.append("audio", blob, "recording.wav");
+
+        try {
+          const response = await fetch("/api/transcribe", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+          resultDiv.textContent = data.text;
+        } catch (error) {
+          console.error("傳送錄音到伺服器時發生錯誤:", error);
+        }
+      }
+    </script>
+  </body>
+</html>
