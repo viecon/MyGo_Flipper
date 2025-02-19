@@ -1,11 +1,10 @@
 from flask import Flask, request, jsonify, render_template
 import os
 import google.generativeai as genai
-
+from dotenv import load_dotenv
 app = Flask(__name__)
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDX9zpqSkfa5D_Ou3bj5btoX8SJkJyE924"
-
+load_dotenv()
 
 words = """
 是又怎樣
@@ -129,7 +128,7 @@ prompt = f"""
 **現在，開始吧！**
 """
 
-genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 model = genai.GenerativeModel(
     model_name="models/gemini-1.5-flash",
@@ -158,7 +157,7 @@ def transcribe_audio(audio_content):
 
     model = genai.GenerativeModel("gemini-1.5-flash")
     result = model.generate_content([
-        "請將以下語音轉文字並直接輸出，如果有雜音可以忽略，如果全都是雜音，請回覆「語音轉文字失敗」",
+        "請將以下語音轉文字並直接輸出，如果有雜音可以忽略，如果全都是雜音，請回覆「&$%$hu#did」",
         {
             "mime_type": "audio/wav",
             "data": audio_content
