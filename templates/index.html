@@ -1,15 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>測試網站</title>
+    <style>
+      /* Modern Styling */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(to right, #141e30, #243b55);
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        max-width: 500px;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s ease-in-out;
+        width: 100%;
+        margin: 10px 0;
+      }
+
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+
+      button:hover:not(:disabled) {
+        background: #0056b3;
+        transform: scale(1.05);
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      #result {
+        margin-top: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      #imgContainer {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+      }
+
+      #image {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <h1>MYGO</h1>
-    <button id="startBtn">開始錄音</button>
-    <button id="stopBtn" disabled>停止錄音</button>
-    <div id="result"></div>
-    <div id="imgContainer">
-      <img id="image" style="width: 50rem; margin: 10px" src="" alt="pics..." />
+    <div class="container">
+      <h1>MYGO</h1>
+      <button id="startBtn">🎤 開始錄音</button>
+      <button id="stopBtn" disabled>⏹️ 停止錄音</button>
+      <div id="result">等待錄音中...</div>
+      <div id="imgContainer">
+        <img id="image" src="" alt="pics..." />
+      </div>
     </div>
 
     <script>
@@ -17,8 +105,8 @@
       const stopBtn = document.getElementById("stopBtn");
       const resultDiv = document.getElementById("result");
       const image = document.getElementById("image");
-      let words = [];
       let recorder;
+
       startBtn.addEventListener("click", () => {
         navigator.mediaDevices
           .getUserMedia({ audio: true })
@@ -27,9 +115,10 @@
             recorder.start();
             startBtn.disabled = true;
             stopBtn.disabled = false;
+            resultDiv.textContent = "🎙️ 錄音中...";
             recorder.ondataavailable = (event) => {
               if (event.data.size > 0) {
-                const blob = new Blob([event.data], { type: "audio/wav" }); // wav
+                const blob = new Blob([event.data], { type: "audio/wav" });
                 sendAudioToServer(blob);
               }
             };
@@ -43,6 +132,7 @@
         recorder.stop();
         startBtn.disabled = false;
         stopBtn.disabled = true;
+        resultDiv.textContent = "⏳ 正在處理...";
       });
 
       async function sendAudioToServer(blob) {
@@ -55,10 +145,12 @@
             body: formData,
           });
           const data = await response.json();
-          resultDiv.textContent = data.text;
+          resultDiv.textContent = `📝 識別結果: ${data.text}`;
           image.src = "../static/pics/" + data.pic + ".jpg";
+          image.style.display = "block";
         } catch (error) {
           console.error("傳送錄音到伺服器時發生錯誤:", error);
+          resultDiv.textContent = "❌ 發生錯誤";
         }
       }
     </script>
