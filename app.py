@@ -2,10 +2,12 @@ from flask import Flask, request, jsonify, render_template
 import os
 import google.generativeai as genai
 import json
-from dotenv import load_dotenv
+import picsort
+
+
+picsort.number_images()
 app = Flask(__name__)
 
-load_dotenv()
 json_data = open("words.json", "r", encoding="utf-8")
 words = json.loads(json_data.read())
 # print(words)
@@ -32,41 +34,43 @@ prompt = f"""
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 model = genai.GenerativeModel(
-    model_name="models/gemini-1.5-flash",
-    system_instruction=prompt
+    model_name="models/gemini-1.5-flash", system_instruction=prompt
 )
 
-@app.route('/')
-def index():
-    return render_template('index.html')
 
-@app.route('/api/transcribe', methods=['POST'])
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/api/transcribe", methods=["POST"])
 def transcribe():
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No audio file provided'}), 400
-    
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+
     # 語音轉文字
-    audio_file = request.files['audio']
+    audio_file = request.files["audio"]
     audio_content = audio_file.read()
     transcript = transcribe_audio(audio_content)
 
     response = model.generate_content(f"回覆以下句子:{transcript}")
     generated_text = response.text[:-1]
-    print({'text': int(generated_text),'pic':words[generated_text]})
-    return jsonify({'text': int(generated_text),'pic':words[generated_text]})
+    print({"text": int(generated_text), "pic": words[generated_text]})
+    return jsonify({"text": int(generated_text), "pic": words[generated_text]})
+
 
 def transcribe_audio(audio_content):
 
     model = genai.GenerativeModel("gemini-1.5-flash")
-    result = model.generate_content([
-        "請將以下語音轉文字並直接輸出，如果有雜音可以忽略，如果全都是雜音或是無法分辨，請回覆「&$%$hu#did」",
-        {
-            "mime_type": "audio/wav",
-            "data": audio_content
-        }
-    ])
-    print(f"{result.text=}")
+    result = model.generate_content(
+        [
+            "請將以下語音轉文字並直接輸出，如果有雜音可以忽略，如果全都是雜音或是無法分辨，請回覆「&$%$hu#did」",
+            {"mime_type": "audio/wav", "data": audio_content},
+        ]
+    )
+    app.logger.info(f"{result.text=}")
     return result.text
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
