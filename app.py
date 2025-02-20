@@ -4,6 +4,8 @@ import google.generativeai as genai
 import json
 import picsort
 
+
+picsort.number_images()
 app = Flask(__name__)
 
 json_data = open("words.json", "r", encoding="utf-8")
@@ -71,5 +73,4 @@ def transcribe_audio(audio_content):
 
 
 if __name__ == "__main__":
-    picsort.number_images()
     app.run(debug=True, host="0.0.0.0")
