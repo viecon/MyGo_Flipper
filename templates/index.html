@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MyGo翻頁機錄音介面</title>
     <style>
-      /* Modern Styling */
       * {
         margin: 0;
         padding: 0;
@@ -99,7 +98,6 @@
         <img id="image" src="" alt="pics..." />
       </div>
     </div>
-
     <script>
       const startBtn = document.getElementById("startBtn");
       const stopBtn = document.getElementById("stopBtn");
@@ -138,7 +136,6 @@
       async function sendAudioToServer(blob) {
         const formData = new FormData();
         formData.append("audio", blob, "recording.wav");
-
         try {
           const response = await fetch("/api/transcribe", {
             method: "POST",

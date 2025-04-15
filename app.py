@@ -34,9 +34,6 @@ prompt = f"""
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-model = genai.GenerativeModel(
-    model_name="models/gemini-1.5-flash", system_instruction=prompt
-)
 
 
 @app.route("/")
@@ -54,6 +51,7 @@ def transcribe():
     audio_content = audio_file.read()
     transcript = transcribe_audio(audio_content)
 
+    model = genai.GenerativeModel(model_name="models/gemini-1.5-flash", system_instruction=prompt)
     response = model.generate_content(f"回覆以下句子:{transcript}")
     generated_text = response.text[:-1]
     app.logger.info(words[generated_text])
