@@ -1,11 +1,11 @@
-FROM python:3.10
+FROM python:3.12.10-slim
 
 WORKDIR /app
 
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir Flask google-generativeai
-
 COPY . .
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 
