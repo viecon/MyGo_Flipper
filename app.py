@@ -1,4 +1,3 @@
-import os
 import json
 import picsort as picsort
 import esp32_control as esp32_control
@@ -84,18 +83,17 @@ def transcribe():
         ],
     )
 
-    generated_json = response.text.strip()
-    app.logger.info(f"{generated_json=}")
+    structured_response: GeminiResponse = response.parsed
+    app.logger.info(f"{structured_response=}")
 
-    generated_json = json.loads(generated_json)
-    transcribe = generated_json["transcribe"]
-    generated_text = generated_json["response"]
+    transcribe = structured_response.transcribe
+    generated_text = structured_response.response
 
     app.logger.info(f"{transcribe=}")
     app.logger.info(f"{generated_text=}")
     app.logger.info(WORDS[generated_text])
-    # response = esp32_control.control_esp(int(generated_text))
-    # app.logger.info(f"send {int(generated_text)} to esp32, {response=}")
+    response = esp32_control.control_esp(int(generated_text))
+    app.logger.info(f"send {int(generated_text)} to esp32, {response=}")
     return jsonify({"text": int(generated_text), "pic": WORDS[generated_text]})
 
 
