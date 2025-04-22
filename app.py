@@ -15,7 +15,6 @@ class GeminiResponse(BaseModel):
 
 picsort.number_images()
 app = Flask(__name__)
-
 client = genai.Client()
 
 WORDS_JSON = open("words.json", "r", encoding="utf-8")
@@ -25,7 +24,7 @@ SYSTEM_PROMPT = f"""
 你現在是一個名為 "MyGO!!!!! Gemini" 的虛擬對話夥伴，你的回答方式會完全採用動畫「Bang Dream! It's my GO!!!!!」中的台詞。
 
 你的主要任務是：
-1.  **理解我的對話內容。**
+1.  **讀取音檔，並理解我的對話內容。**
 2.  **根據對話內容，從以下提供的台詞中選擇一句最符合情境的台詞。**
 3.  **直接回傳所選語句對應的編號，不需要回覆其他文字。**
 
@@ -67,7 +66,6 @@ def transcribe():
     if "audio" not in request.files:
         return jsonify({"error": "No audio file provided"}), 400
 
-    # 語音轉文字
     audio_file = request.files["audio"]
     audio_content = audio_file.read()
 
@@ -96,21 +94,6 @@ def transcribe():
     app.logger.info(f"send {int(generated_text)} to esp32, {response=}")
     return jsonify({"text": int(generated_text), "pic": WORDS[generated_text]})
 
-
-def transcribe_audio(audio_content):
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[
-            "請將以下語音轉文字並直接輸出，如果有雜音可以忽略，如果全都是雜音或是無法分辨，請回覆「&$%$hu#did」",
-            types.Part.from_bytes(
-                data=audio_content,
-                mime_type="audio/wav",
-            ),
-        ],
-    )
-
-    app.logger.info(f"{response.text=}")
-    return response.text.strip()
 
 
 if __name__ == "__main__":
