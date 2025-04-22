@@ -6,6 +6,13 @@ import esp32_control as esp32_control
 from google import genai
 from google.genai import types
 from flask import Flask, request, jsonify, render_template
+from pydantic import BaseModel
+
+
+class GeminiResponse(BaseModel):
+    transcribe: str
+    response: str
+
 
 picsort.number_images()
 app = Flask(__name__)
@@ -35,7 +42,20 @@ SYSTEM_PROMPT = f"""
 **現在，開始吧！**
 """
 
-SYSTEM_PROMPT_CONFIG = types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT)
+PROMPT = """
+回覆音訊內容中的句子，如果有雜音可以忽略，如果全都是雜音或是無法分辨，請辨識為「&$%$hu#did」，你必須用 json 格式回應，範例如下：
+input : "早安"
+output : {
+    "transcribe": "早安",
+    "response": "31"
+}
+"""
+
+SYSTEM_PROMPT_CONFIG = types.GenerateContentConfig(
+    system_instruction=SYSTEM_PROMPT,
+    response_mime_type="application/json",
+    response_schema=GeminiResponse,
+)
 
 
 @app.route("/")
@@ -51,21 +71,31 @@ def transcribe():
     # 語音轉文字
     audio_file = request.files["audio"]
     audio_content = audio_file.read()
-    transcript = transcribe_audio(audio_content)
-    app.logger.info(f"transcript: {transcript}")
 
     response = client.models.generate_content(
         model="gemini-2.0-flash",
         config=SYSTEM_PROMPT_CONFIG,
-        contents=f"回覆以下句子:{transcript}",
+        contents=[
+            PROMPT,
+            types.Part.from_bytes(
+                data=audio_content,
+                mime_type="audio/wav",
+            ),
+        ],
     )
-    app.logger.info(f"{response.text=}")
 
-    generated_text = response.text.strip()
-    app.logger.info(f"generated_text: {generated_text}")
+    generated_json = response.text.strip()
+    app.logger.info(f"{generated_json=}")
+
+    generated_json = json.loads(generated_json)
+    transcribe = generated_json["transcribe"]
+    generated_text = generated_json["response"]
+
+    app.logger.info(f"{transcribe=}")
+    app.logger.info(f"{generated_text=}")
     app.logger.info(WORDS[generated_text])
-    response = esp32_control.control_esp(int(generated_text))
-    app.logger.info(f"send {int(generated_text)} to esp32, {response=}")
+    # response = esp32_control.control_esp(int(generated_text))
+    # app.logger.info(f"send {int(generated_text)} to esp32, {response=}")
     return jsonify({"text": int(generated_text), "pic": WORDS[generated_text]})
 
 
