@@ -1,2 +1,4 @@
 *.md
 .env
+static/
+templates/
