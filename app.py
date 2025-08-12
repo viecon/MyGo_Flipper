@@ -27,7 +27,6 @@ formatter = logging.Formatter(
 )
 handler.setFormatter(formatter)
 
-# Clear default handlers and add ours
 app.logger.handlers.clear()
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
